@@ -15,6 +15,7 @@ public class UserDetailServiceImpl implements IUserDetailService {
 
     private final UserRepository userRepository;
 
+    @Override
     public UserDetails loadUserByUsername(String username){
         User user = userRepository.findByUsername(username);
 
