@@ -1,8 +1,8 @@
 package com.example.distributed_chat_system.controller;
 
-import com.example.distributed_chat_system.dto.LoginRequest;
-import com.example.distributed_chat_system.dto.LoginResponse;
-import com.example.distributed_chat_system.dto.RegisterRequest;
+import com.example.distributed_chat_system.model.request.LoginRequest;
+import com.example.distributed_chat_system.model.response.LoginResponse;
+import com.example.distributed_chat_system.model.request.RegisterRequest;
 import com.example.distributed_chat_system.service.IAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

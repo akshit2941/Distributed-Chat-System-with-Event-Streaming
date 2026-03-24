@@ -1,4 +1,4 @@
-package com.example.distributed_chat_system.dto;
+package com.example.distributed_chat_system.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

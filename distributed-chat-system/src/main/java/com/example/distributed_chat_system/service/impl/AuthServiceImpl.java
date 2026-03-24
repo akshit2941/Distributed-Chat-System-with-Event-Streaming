@@ -1,8 +1,8 @@
 package com.example.distributed_chat_system.service.impl;
 
 import com.example.distributed_chat_system.config.JwtProvider;
-import com.example.distributed_chat_system.dto.LoginRequest;
-import com.example.distributed_chat_system.dto.LoginResponse;
+import com.example.distributed_chat_system.model.request.LoginRequest;
+import com.example.distributed_chat_system.model.response.LoginResponse;
 import com.example.distributed_chat_system.entity.User;
 import com.example.distributed_chat_system.repository.UserRepository;
 import com.example.distributed_chat_system.service.IAuthService;

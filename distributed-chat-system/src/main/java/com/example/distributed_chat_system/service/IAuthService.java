@@ -1,7 +1,7 @@
 package com.example.distributed_chat_system.service;
 
-import com.example.distributed_chat_system.dto.LoginRequest;
-import com.example.distributed_chat_system.dto.LoginResponse;
+import com.example.distributed_chat_system.model.request.LoginRequest;
+import com.example.distributed_chat_system.model.response.LoginResponse;
 
 public interface IAuthService {
     LoginResponse login(LoginRequest request);
