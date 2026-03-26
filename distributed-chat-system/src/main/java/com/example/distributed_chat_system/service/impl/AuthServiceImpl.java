@@ -1,6 +1,7 @@
 package com.example.distributed_chat_system.service.impl;
 
 import com.example.distributed_chat_system.config.JwtProvider;
+import com.example.distributed_chat_system.model.UserInfo;
 import com.example.distributed_chat_system.model.request.LoginRequest;
 import com.example.distributed_chat_system.model.response.LoginResponse;
 import com.example.distributed_chat_system.entity.User;
@@ -35,10 +36,9 @@ public class AuthServiceImpl implements IAuthService {
                 )
         );
 
-        UserDetails userDetails =
-                (UserDetails) authentication.getPrincipal();
+        UserInfo userDetails = (UserInfo) authentication.getPrincipal();
 
-        String token = jwtProvider.generateToken(userDetails);
+        String token = jwtProvider.generateToken(userDetails, userDetails.getUserId());
 
         return new LoginResponse(token);
     }

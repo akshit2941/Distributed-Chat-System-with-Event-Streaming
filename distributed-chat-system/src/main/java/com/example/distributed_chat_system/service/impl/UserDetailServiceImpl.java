@@ -1,6 +1,7 @@
 package com.example.distributed_chat_system.service.impl;
 
 import com.example.distributed_chat_system.entity.User;
+import com.example.distributed_chat_system.model.UserInfo;
 import com.example.distributed_chat_system.repository.UserRepository;
 import com.example.distributed_chat_system.service.IUserDetailService;
 import lombok.RequiredArgsConstructor;
@@ -8,8 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -27,10 +26,10 @@ public class UserDetailServiceImpl implements IUserDetailService {
 
         log.info("Loading user: {}, password from DB: {}", username, user.getPassword());
 
-        return new org.springframework.security.core.userdetails.User(
+        return new UserInfo(
+                user.getId(),
                 user.getUsername(),
-                user.getPassword(),
-                Collections.emptyList()
+                user.getPassword()
         );
     }
 }

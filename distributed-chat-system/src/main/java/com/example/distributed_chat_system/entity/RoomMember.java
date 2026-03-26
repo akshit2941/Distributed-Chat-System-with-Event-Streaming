@@ -1,48 +1,49 @@
 package com.example.distributed_chat_system.entity;
 
-import com.example.distributed_chat_system.enums.ChatroomType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Data
-@Builder
 @Entity
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-@Table(name = "chatroom")
-public class ChatRooms {
+@AllArgsConstructor
+@Builder
+@Table(name = "roommember")
+public class RoomMember {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 150)
-    private String name;
+    @Column(name = "room_Id", nullable = false)
+    private Long room;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ChatroomType type;
+    // Many members belong to one user
+    @Column(name = "user_id", nullable = false)
+    private Long user;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "joined_at")
+    private LocalDateTime joinedAt;
 
     @PrePersist
     public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+        if (joinedAt == null) {
+            joinedAt = LocalDateTime.now();
         }
     }
 }
