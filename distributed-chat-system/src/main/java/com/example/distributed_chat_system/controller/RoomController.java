@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,6 +30,12 @@ public class RoomController {
     @GetMapping("/room/get")
     public ResponseEntity<RoomListResponse> getRooms(@CurrentUser UserPrincipal userPrincipal){
         return ResponseEntity.ok(roomService.getRooms());
+    }
+
+    @PostMapping("room/join")
+    public void joinChatRoom(@CurrentUser UserPrincipal userPrincipal, @RequestParam(required = true) Long id){
+        roomService.joinRoom(userPrincipal.getUserId(),id);
+        ResponseEntity.ok();
     }
 
 }

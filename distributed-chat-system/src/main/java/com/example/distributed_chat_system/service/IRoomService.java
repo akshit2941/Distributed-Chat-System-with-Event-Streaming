@@ -10,4 +10,6 @@ public interface IRoomService {
     CreateRoomResponse createRoom(UserPrincipal userPrincipal, RoomCreateRequest request);
 
     RoomListResponse getRooms();
+
+    void joinRoom(Long userId ,Long id);
 }

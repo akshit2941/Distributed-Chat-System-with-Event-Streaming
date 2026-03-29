@@ -1,5 +1,6 @@
 package com.example.distributed_chat_system.service.impl;
 
+import com.example.distributed_chat_system.config.CustomException;
 import com.example.distributed_chat_system.entity.ChatRooms;
 import com.example.distributed_chat_system.entity.RoomMember;
 import com.example.distributed_chat_system.model.dto.UserPrincipal;
@@ -80,5 +81,19 @@ public class RoomServiceImpl implements IRoomService {
 
                 )
                 .build();
+    }
+
+    @Override
+    public void joinRoom(Long userId,Long id) {
+        ChatRooms chatRooms = chatRoomService.getById(id);
+        if(chatRooms==null){
+            throw new CustomException("Chat Room Not Found!");
+        }
+        RoomMember roomMember = RoomMember.builder()
+                .room(chatRooms.getId())
+                .user(userId)
+                .build();
+
+        roomMemberService.save(roomMember);
     }
 }

@@ -8,4 +8,6 @@ public interface IChatRoomService {
     ChatRooms save(ChatRooms chatRooms);
 
     List<ChatRooms> getAll();
+
+    ChatRooms getById(Long id);
 }

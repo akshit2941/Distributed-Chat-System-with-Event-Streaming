@@ -23,4 +23,9 @@ public class ChatRoomServiceImpl implements IChatRoomService {
     public List<ChatRooms> getAll(){
         return chatRoomRepository.findAll();
     }
+
+    @Override
+    public ChatRooms getById(Long id){
+        return chatRoomRepository.findById(id);
+    }
 }
