@@ -4,9 +4,11 @@ import com.example.distributed_chat_system.annotations.CurrentUser;
 import com.example.distributed_chat_system.model.dto.UserPrincipal;
 import com.example.distributed_chat_system.model.request.RoomCreateRequest;
 import com.example.distributed_chat_system.model.response.CreateRoomResponse;
+import com.example.distributed_chat_system.model.response.RoomListResponse;
 import com.example.distributed_chat_system.service.IRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,11 @@ public class RoomController {
     @PostMapping("/room/create")
     public ResponseEntity<CreateRoomResponse> createRoom(@CurrentUser UserPrincipal userPrincipal, @RequestBody RoomCreateRequest request){
         return ResponseEntity.ok(roomService.createRoom(userPrincipal,request));
+    }
+
+    @GetMapping("/room/get")
+    public ResponseEntity<RoomListResponse> getRooms(@CurrentUser UserPrincipal userPrincipal){
+        return ResponseEntity.ok(roomService.getRooms());
     }
 
 }

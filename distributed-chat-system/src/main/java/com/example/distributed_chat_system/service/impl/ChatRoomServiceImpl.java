@@ -6,6 +6,8 @@ import com.example.distributed_chat_system.service.IChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ChatRoomServiceImpl implements IChatRoomService {
@@ -15,5 +17,10 @@ public class ChatRoomServiceImpl implements IChatRoomService {
     @Override
     public ChatRooms save(ChatRooms chatRooms){
         return chatRoomRepository.save(chatRooms);
+    }
+
+    @Override
+    public List<ChatRooms> getAll(){
+        return chatRoomRepository.findAll();
     }
 }
