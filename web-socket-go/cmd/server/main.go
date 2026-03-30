@@ -3,17 +3,16 @@ package main
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/gorilla/mux"
+	"web-socket-go/internal/ws"
 )
 
 func main() {
-	r := mux.NewRouter()
+	http.HandleFunc("/ws", ws.HandleWebSocket)
 
-	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Server is running")
-	}).Methods("GET")
+	fmt.Println("Server Started on port :8080")
 
-	fmt.Println("Server Started on port 8080")
-	http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		panic(err)
+	}
 }
