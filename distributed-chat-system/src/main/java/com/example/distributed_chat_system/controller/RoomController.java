@@ -2,8 +2,10 @@ package com.example.distributed_chat_system.controller;
 
 import com.example.distributed_chat_system.annotations.CurrentUser;
 import com.example.distributed_chat_system.model.dto.UserPrincipal;
+import com.example.distributed_chat_system.model.request.MessageRequest;
 import com.example.distributed_chat_system.model.request.RoomCreateRequest;
 import com.example.distributed_chat_system.model.response.CreateRoomResponse;
+import com.example.distributed_chat_system.model.response.MessageResponse;
 import com.example.distributed_chat_system.model.response.RoomListResponse;
 import com.example.distributed_chat_system.service.IRoomService;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +34,15 @@ public class RoomController {
         return ResponseEntity.ok(roomService.getRooms());
     }
 
-    @PostMapping("room/join")
+    @PostMapping("/room/join")
     public void joinChatRoom(@CurrentUser UserPrincipal userPrincipal, @RequestParam(required = true) Long id){
         roomService.joinRoom(userPrincipal.getUserId(),id);
         ResponseEntity.ok();
+    }
+
+    @PostMapping("/message/send")
+    public ResponseEntity<MessageResponse> sendMessage(@CurrentUser UserPrincipal userPrincipal, @RequestBody MessageRequest request){
+        return ResponseEntity.ok(roomService.sendMessage(userPrincipal.getUserId(), request));
     }
 
 }

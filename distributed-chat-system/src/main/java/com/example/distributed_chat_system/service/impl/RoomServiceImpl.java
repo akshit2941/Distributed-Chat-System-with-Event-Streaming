@@ -2,13 +2,17 @@ package com.example.distributed_chat_system.service.impl;
 
 import com.example.distributed_chat_system.config.CustomException;
 import com.example.distributed_chat_system.entity.ChatRooms;
+import com.example.distributed_chat_system.entity.Message;
 import com.example.distributed_chat_system.entity.RoomMember;
 import com.example.distributed_chat_system.model.dto.UserPrincipal;
 import com.example.distributed_chat_system.model.projection.RoomMemberCountProjection;
+import com.example.distributed_chat_system.model.request.MessageRequest;
 import com.example.distributed_chat_system.model.request.RoomCreateRequest;
 import com.example.distributed_chat_system.model.response.CreateRoomResponse;
+import com.example.distributed_chat_system.model.response.MessageResponse;
 import com.example.distributed_chat_system.model.response.RoomListResponse;
 import com.example.distributed_chat_system.service.IChatRoomService;
+import com.example.distributed_chat_system.service.IMessageService;
 import com.example.distributed_chat_system.service.IRoomMemberService;
 import com.example.distributed_chat_system.service.IRoomService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,7 @@ public class RoomServiceImpl implements IRoomService {
 
     private final IChatRoomService chatRoomService;
     private final IRoomMemberService roomMemberService;
+    private final IMessageService messageService;
 
     @Override
     public CreateRoomResponse createRoom(UserPrincipal userPrincipal, RoomCreateRequest request) {
@@ -95,5 +100,21 @@ public class RoomServiceImpl implements IRoomService {
                 .build();
 
         roomMemberService.save(roomMember);
+    }
+
+    @Override
+    public MessageResponse sendMessage(Long userId, MessageRequest request) {
+        Message message = Message.builder()
+                .content(request.getMessage())
+                .room(request.getRoomId())
+                .sender(userId)
+                .build();
+        messageService.save(message);
+
+        return MessageResponse.builder()
+                .content(request.getMessage())
+                .roomId(request.getRoomId())
+                .senderId(userId)
+                .build();
     }
 }
