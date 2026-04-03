@@ -14,9 +14,9 @@ func main() {
 		ws.HandleWebSocket(mgr, w, r)
 	})
 
-	fmt.Println("Server Started on port :8080")
+	fmt.Println("Server Started on port :8081")
 
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
 		panic(err)
 	}

@@ -26,6 +26,7 @@ public class ChatRoomServiceImpl implements IChatRoomService {
 
     @Override
     public ChatRooms getById(Long id){
-        return chatRoomRepository.findById(id);
+        return chatRoomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
     }
 }
