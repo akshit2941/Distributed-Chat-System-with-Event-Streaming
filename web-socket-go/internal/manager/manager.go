@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"fmt"
 	"sync"
 	"web-socket-go/internal/models"
 )
@@ -62,7 +63,11 @@ func (m *Manager) Broadcast(roomID string, message []byte) {
 		return
 	}
 
+	fmt.Println("Total users:", len(clients))
+	fmt.Println("Broadcasting to room:", roomID)
+
 	for _, clients := range clients {
 		clients.Conn.WriteMessage(1, message)
+
 	}
 }

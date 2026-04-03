@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"web-socket-go/internal/manager"
@@ -27,7 +28,7 @@ func HandleWebSocket(mgr *manager.Manager, w http.ResponseWriter, r *http.Reques
 
 	client := &models.Client{
 		Conn:   conn,
-		UserID: "user1", // temporary
+		UserID: fmt.Sprintf("user-%p", conn), // temporary
 		RoomID: "room1",
 	}
 
@@ -36,21 +37,38 @@ func HandleWebSocket(mgr *manager.Manager, w http.ResponseWriter, r *http.Reques
 
 	//infinite loop for messages to be kept reading
 	for {
-		messageType, message, err := conn.ReadMessage()
+
+		_, messageBytes, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Println("Client disconnected")
+			mgr.RemoveClient(client)
+			conn.Close()
 			break
 		}
-
-		fmt.Println("Recieved:", string(message))
-
-		// broadcast instead of echo
-		mgr.Broadcast(client.RoomID, message)
-
-		err = conn.WriteMessage(messageType, message)
+		var msg models.Message
+		err = json.Unmarshal(messageBytes, &msg)
 		if err != nil {
-			fmt.Println("Write error:", err)
-			break
+			fmt.Println("Invalid message format")
+			continue
+		}
+
+		switch msg.Type {
+
+		case "MESSAGE":
+			data, _ := json.Marshal(msg)
+			mgr.Broadcast(msg.RoomID, data)
+
+		case "JOIN":
+			fmt.Println(msg.SenderID, "joined", msg.RoomID)
+
+		case "LEAVE":
+			fmt.Println(msg.SenderID, "left", msg.RoomID)
+
+		case "TYPING":
+			data, _ := json.Marshal(msg)
+			mgr.Broadcast(msg.RoomID, data)
+
+		default:
+			fmt.Println("Unknown message type")
 		}
 	}
 }
