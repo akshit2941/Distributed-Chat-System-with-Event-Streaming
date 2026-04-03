@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"web-socket-go/internal/manager"
 	"web-socket-go/internal/models"
+	"web-socket-go/internal/rabbitmq"
 
 	"github.com/gorilla/websocket"
 )
@@ -16,7 +17,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func HandleWebSocket(mgr *manager.Manager, w http.ResponseWriter, r *http.Request) {
+func HandleWebSocket(mgr *manager.Manager, producer *rabbitmq.Producer, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("Upgrade failed:", err)
@@ -56,6 +57,7 @@ func HandleWebSocket(mgr *manager.Manager, w http.ResponseWriter, r *http.Reques
 		case "MESSAGE":
 			data, _ := json.Marshal(msg)
 			mgr.Broadcast(msg.RoomID, data)
+			producer.Publish(data)
 
 		case "JOIN":
 			fmt.Println(msg.SenderID, "joined", msg.RoomID)
