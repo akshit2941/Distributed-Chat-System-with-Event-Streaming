@@ -7,8 +7,8 @@ import (
 )
 
 type Manager struct {
-	Clients map[string]*models.Client
-	Rooms   map[string]map[string]*models.Client
+	Clients map[int]*models.Client
+	Rooms   map[string]map[int]*models.Client
 
 	//to maintain race conditions
 	mu sync.Mutex
@@ -16,8 +16,8 @@ type Manager struct {
 
 func NewManager() *Manager {
 	return &Manager{
-		Clients: make(map[string]*models.Client),
-		Rooms:   make(map[string]map[string]*models.Client),
+		Clients: make(map[int]*models.Client),
+		Rooms:   make(map[string]map[int]*models.Client),
 	}
 }
 
@@ -30,7 +30,7 @@ func (m *Manager) AddClient(client *models.Client) {
 
 	//if room do not exist then create
 	if _, exists := m.Rooms[client.RoomID]; !exists {
-		m.Rooms[client.RoomID] = make(map[string]*models.Client)
+		m.Rooms[client.RoomID] = make(map[int]*models.Client)
 	}
 
 	//add the user
