@@ -7,6 +7,8 @@ import com.example.distributed_chat_system.model.response.CreateRoomResponse;
 import com.example.distributed_chat_system.model.response.MessageResponse;
 import com.example.distributed_chat_system.model.response.RoomListResponse;
 
+import java.util.List;
+
 public interface IRoomService {
 
     CreateRoomResponse createRoom(UserPrincipal userPrincipal, RoomCreateRequest request);
@@ -16,4 +18,6 @@ public interface IRoomService {
     void joinRoom(Long userId ,Long id);
 
     MessageResponse sendMessage(Long userId, MessageRequest request);
+
+    List<MessageResponse> getMessageHistory(Long userId, Long roomId);
 }

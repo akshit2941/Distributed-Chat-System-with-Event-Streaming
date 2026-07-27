@@ -24,4 +24,9 @@ public class RoomMemberServiceImpl implements IRoomMemberService {
     public List<RoomMemberCountProjection> countMembersByRoomIds(List<Long> Ids){
         return roomMemberRepository.countMembersByRoomIds(Ids);
     }
+
+    @Override
+    public boolean isMember(Long roomId, Long userId) {
+        return roomMemberRepository.existsByRoomAndUser(roomId, userId);
+    }
 }

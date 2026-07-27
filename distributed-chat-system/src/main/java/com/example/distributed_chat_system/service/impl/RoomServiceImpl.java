@@ -117,4 +117,27 @@ public class RoomServiceImpl implements IRoomService {
                 .senderId(userId)
                 .build();
     }
+
+    @Override
+    public List<MessageResponse> getMessageHistory(Long userId, Long roomId) {
+        ChatRooms room = chatRoomService.getById(roomId);
+        if (room == null) {
+            throw new CustomException("Chat Room Not Found!");
+        }
+
+        boolean isMember = roomMemberService.isMember(roomId, userId);
+        if (!isMember) {
+            throw new CustomException("You are not a member of this chat room!");
+        }
+
+        List<Message> messages = messageService.getMessagesByRoom(roomId);
+
+        return messages.stream()
+                .map(msg -> MessageResponse.builder()
+                        .content(msg.getContent())
+                        .roomId(msg.getRoom())
+                        .senderId(msg.getSender())
+                        .build())
+                .toList();
+    }
 }

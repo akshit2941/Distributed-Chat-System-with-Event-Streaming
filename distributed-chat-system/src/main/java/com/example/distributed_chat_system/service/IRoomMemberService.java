@@ -9,4 +9,6 @@ public interface IRoomMemberService {
     RoomMember save(RoomMember roomMember);
 
     List<RoomMemberCountProjection> countMembersByRoomIds(List<Long> Ids);
+
+    boolean isMember(Long roomId, Long userId);
 }

@@ -16,4 +16,6 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
             "GROUP BY r.room")
     List<RoomMemberCountProjection> countMembersByRoomIds(@Param("roomIds") List<Long> roomIds);
 
+    boolean existsByRoomAndUser(Long room, Long user);
+
 }
