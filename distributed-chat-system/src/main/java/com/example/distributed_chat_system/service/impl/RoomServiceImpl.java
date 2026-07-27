@@ -16,7 +16,10 @@ import com.example.distributed_chat_system.service.IMessageService;
 import com.example.distributed_chat_system.service.IRoomMemberService;
 import com.example.distributed_chat_system.service.IRoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.distributed_chat_system.model.dto.MessageDto;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,8 @@ public class RoomServiceImpl implements IRoomService {
     private final IChatRoomService chatRoomService;
     private final IRoomMemberService roomMemberService;
     private final IMessageService messageService;
+    private final RabbitTemplate rabbitTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
     public CreateRoomResponse createRoom(UserPrincipal userPrincipal, RoomCreateRequest request) {
@@ -104,12 +109,24 @@ public class RoomServiceImpl implements IRoomService {
 
     @Override
     public MessageResponse sendMessage(Long userId, MessageRequest request) {
-        Message message = Message.builder()
+        boolean isMember = roomMemberService.isMember(request.getRoomId(), userId);
+        if (!isMember) {
+            throw new CustomException("You are not a member of this chat room!");
+        }
+
+        MessageDto messageDto = MessageDto.builder()
+                .type("MESSAGE")
+                .roomId(String.valueOf(request.getRoomId()))
+                .senderId(String.valueOf(userId))
                 .content(request.getMessage())
-                .room(request.getRoomId())
-                .sender(userId)
                 .build();
-        messageService.save(message);
+
+        try {
+            String messageJson = objectMapper.writeValueAsString(messageDto);
+            rabbitTemplate.convertAndSend("chat_exchange", "", messageJson);
+        } catch (Exception e) {
+            throw new CustomException("Failed to send message over event stream: " + e.getMessage());
+        }
 
         return MessageResponse.builder()
                 .content(request.getMessage())
