@@ -81,9 +81,11 @@ func HandleWebSocket(mgr *manager.Manager, producer *rabbitmq.Producer, w http.R
 
 		case "JOIN":
 			fmt.Println(msg.SenderID, "joined", msg.RoomID)
+			mgr.JoinRoom(client, msg.RoomID)
 
 		case "LEAVE":
 			fmt.Println(msg.SenderID, "left", msg.RoomID)
+			mgr.JoinRoom(client, "")
 
 		case "TYPING":
 			data, _ := json.Marshal(msg)

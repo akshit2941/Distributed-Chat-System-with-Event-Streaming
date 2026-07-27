@@ -54,6 +54,30 @@ func (m *Manager) RemoveClient(client *models.Client) {
 	}
 }
 
+func (m *Manager) JoinRoom(client *models.Client, newRoomID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Remove from the old room if any
+	if room, exists := m.Rooms[client.RoomID]; exists {
+		delete(room, client.UserID)
+		if len(room) == 0 {
+			delete(m.Rooms, client.RoomID)
+		}
+	}
+
+	// Update client's RoomID
+	client.RoomID = newRoomID
+
+	// Initialize new room if it doesn't exist
+	if _, exists := m.Rooms[newRoomID]; !exists {
+		m.Rooms[newRoomID] = make(map[int]*models.Client)
+	}
+
+	// Add to the new room
+	m.Rooms[newRoomID][client.UserID] = client
+}
+
 func (m *Manager) Broadcast(roomID string, message []byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
