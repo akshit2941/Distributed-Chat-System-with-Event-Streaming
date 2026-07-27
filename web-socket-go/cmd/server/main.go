@@ -12,6 +12,10 @@ var mgr = manager.NewManager()
 var producer = rabbitmq.NewProducer()
 
 func main() {
+	consumer := rabbitmq.NewConsumer(mgr)
+	consumer.Start()
+	defer consumer.Close()
+
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ws.HandleWebSocket(mgr, producer, w, r)
 	})
@@ -22,5 +26,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 }

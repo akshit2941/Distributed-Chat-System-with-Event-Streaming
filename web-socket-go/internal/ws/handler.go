@@ -76,7 +76,6 @@ func HandleWebSocket(mgr *manager.Manager, producer *rabbitmq.Producer, w http.R
 
 		case "MESSAGE":
 			data, _ := json.Marshal(msg)
-			mgr.Broadcast(msg.RoomID, data)
 			producer.Publish(data)
 
 		case "JOIN":
@@ -89,7 +88,7 @@ func HandleWebSocket(mgr *manager.Manager, producer *rabbitmq.Producer, w http.R
 
 		case "TYPING":
 			data, _ := json.Marshal(msg)
-			mgr.Broadcast(msg.RoomID, data)
+			producer.Publish(data)
 
 		default:
 			fmt.Println("Unknown message type")

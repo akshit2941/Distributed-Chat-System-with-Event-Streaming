@@ -9,7 +9,6 @@ import (
 type Producer struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
-	queue   *amqp.Queue
 }
 
 func NewProducer() *Producer {
@@ -23,30 +22,30 @@ func NewProducer() *Producer {
 		log.Fatal("Failed to open a channel:", err)
 	}
 
-	q, err := ch.QueueDeclare(
-		"chat_queue",
-		true,
-		false,
-		false,
-		false,
-		nil,
+	// Declare exchange to ensure it exists
+	err = ch.ExchangeDeclare(
+		"chat_exchange", // name
+		"fanout",        // type
+		true,            // durable
+		false,           // auto-deleted
+		false,           // internal
+		false,           // no-wait
+		nil,             // arguments
 	)
-
 	if err != nil {
-		log.Fatal("Failed to declare a queue:", err)
+		log.Fatal("Failed to declare exchange for producer:", err)
 	}
 
 	return &Producer{
 		conn:    conn,
 		channel: ch,
-		queue:   &q,
 	}
 }
 
 func (p *Producer) Publish(message []byte) {
 	err := p.channel.Publish(
-		"",
-		p.queue.Name,
+		"chat_exchange", // exchange name
+		"",              // routing key (ignored for fanout)
 		false,
 		false,
 		amqp.Publishing{
