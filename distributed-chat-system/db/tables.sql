@@ -1,4 +1,4 @@
-CREATE TABLE User (
+CREATE TABLE user (
                       id BIGINT PRIMARY KEY AUTO_INCREMENT,
                       username VARCHAR(100) NOT NULL,
                       email VARCHAR(150) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE roommember (
                                 ON DELETE CASCADE,
 
                             CONSTRAINT fk_user FOREIGN KEY (user_id)
-                                REFERENCES User(id)
+                                REFERENCES user(id)
                                 ON DELETE CASCADE,
 
                             CONSTRAINT uq_room_user UNIQUE (room_id, user_id)
@@ -47,6 +47,6 @@ CREATE TABLE message (
                              ON DELETE CASCADE,
 
                          CONSTRAINT fk_message_sender FOREIGN KEY (sender_id)
-                             REFERENCES User(id)
+                             REFERENCES user(id)
                              ON DELETE CASCADE
 );

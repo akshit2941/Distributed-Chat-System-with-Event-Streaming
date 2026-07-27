@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: akshit2941
       MYSQL_DATABASE: distributedchatsystem
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       # Mount the schema file to initialize the database automatically before Spring Boot validates it
