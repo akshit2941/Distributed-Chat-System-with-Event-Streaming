@@ -3,64 +3,50 @@ CREATE TABLE User (
                       username VARCHAR(100) NOT NULL,
                       email VARCHAR(150) NOT NULL,
                       password VARCHAR(255) NOT NULL,
-                      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
                       CONSTRAINT uq_username UNIQUE (username),
                       CONSTRAINT uq_email UNIQUE (email)
 );
 
 
-CREATE TABLE ChatRoom (
+CREATE TABLE chatroom (
                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
                           name VARCHAR(150) NOT NULL,
                           type ENUM('PRIVATE', 'GROUP') NOT NULL,
-                          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
-CREATE TABLE RoomMember (
+CREATE TABLE roommember (
                             id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                            roomId BIGINT NOT NULL,
-                            userId BIGINT NOT NULL,
-                            joinedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            room_id BIGINT NOT NULL,
+                            user_id BIGINT NOT NULL,
+                            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-                            CONSTRAINT fk_room FOREIGN KEY (roomId)
-                                REFERENCES ChatRoom(id)
+                            CONSTRAINT fk_room FOREIGN KEY (room_id)
+                                REFERENCES chatroom(id)
                                 ON DELETE CASCADE,
 
-                            CONSTRAINT fk_user FOREIGN KEY (userId)
+                            CONSTRAINT fk_user FOREIGN KEY (user_id)
                                 REFERENCES User(id)
                                 ON DELETE CASCADE,
 
-                            CONSTRAINT uq_room_user UNIQUE (roomId, userId)
+                            CONSTRAINT uq_room_user UNIQUE (room_id, user_id)
 );
 
-CREATE TABLE Message (
+CREATE TABLE message (
                          id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                         roomId BIGINT NOT NULL,
-                         senderId BIGINT NOT NULL,
+                         room_id BIGINT NOT NULL,
+                         sender_id BIGINT NOT NULL,
                          content TEXT NOT NULL,
-                         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-                         CONSTRAINT fk_message_room FOREIGN KEY (roomId)
-                             REFERENCES ChatRoom(id)
+                         CONSTRAINT fk_message_room FOREIGN KEY (room_id)
+                             REFERENCES chatroom(id)
                              ON DELETE CASCADE,
 
-                         CONSTRAINT fk_message_sender FOREIGN KEY (senderId)
+                         CONSTRAINT fk_message_sender FOREIGN KEY (sender_id)
                              REFERENCES User(id)
                              ON DELETE CASCADE
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-

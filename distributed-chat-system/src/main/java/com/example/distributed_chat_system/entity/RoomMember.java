@@ -30,7 +30,7 @@ public class RoomMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "room_Id", nullable = false)
+    @Column(name = "room_id", nullable = false)
     private Long room;
 
     // Many members belong to one user
