@@ -2,6 +2,7 @@ package rabbitmq
 
 import (
 	"log"
+	"os"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -12,7 +13,12 @@ type Producer struct {
 }
 
 func NewProducer() *Producer {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL == "" {
+		rabbitURL = "amqp://guest:guest@localhost:5672/"
+	}
+
+	conn, err := amqp.Dial(rabbitURL)
 	if err != nil {
 		log.Fatal("Failed to connect to RabbitMQ:", err)
 	}

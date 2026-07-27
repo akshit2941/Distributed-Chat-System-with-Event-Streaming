@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"web-socket-go/internal/manager"
 	"web-socket-go/internal/models"
 
@@ -17,7 +18,12 @@ type Consumer struct {
 }
 
 func NewConsumer(mgr *manager.Manager) *Consumer {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL == "" {
+		rabbitURL = "amqp://guest:guest@localhost:5672/"
+	}
+
+	conn, err := amqp.Dial(rabbitURL)
 	if err != nil {
 		log.Fatal("Failed to connect to RabbitMQ for consumer:", err)
 	}
