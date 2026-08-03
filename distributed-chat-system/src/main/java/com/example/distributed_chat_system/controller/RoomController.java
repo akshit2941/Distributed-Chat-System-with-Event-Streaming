@@ -53,4 +53,9 @@ public class RoomController {
         return ResponseEntity.ok(roomService.getMessageHistory(userPrincipal.getUserId(), roomId));
     }
 
+    @GetMapping("/users")
+    public ResponseEntity<java.util.Map<Long, String>> getAllUsers(@CurrentUser UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(roomService.getAllUsers());
+    }
+
 }

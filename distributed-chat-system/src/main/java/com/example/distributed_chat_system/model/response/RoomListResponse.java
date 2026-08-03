@@ -21,6 +21,7 @@ public class RoomListResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RoomDetail {
+        private Long id;
         private String name;
         private ChatroomType type;
         private Long members;

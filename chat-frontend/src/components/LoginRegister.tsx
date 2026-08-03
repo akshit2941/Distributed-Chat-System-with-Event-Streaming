@@ -56,7 +56,7 @@ export const LoginRegister: React.FC = () => {
           <div className="auth-logo">
             <MessageSquareCode size={48} />
           </div>
-          <h2 className="auth-title">Welcome to Synapse</h2>
+          <h2 className="auth-title">Distributed Chat System</h2>
           <p className="auth-subtitle">
             {isLogin ? 'Log in to join the conversation' : 'Create an account to get started'}
           </p>

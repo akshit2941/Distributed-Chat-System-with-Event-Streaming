@@ -8,6 +8,7 @@ import com.example.distributed_chat_system.model.response.MessageResponse;
 import com.example.distributed_chat_system.model.response.RoomListResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IRoomService {
 
@@ -20,4 +21,6 @@ public interface IRoomService {
     MessageResponse sendMessage(Long userId, MessageRequest request);
 
     List<MessageResponse> getMessageHistory(Long userId, Long roomId);
+
+    Map<Long, String> getAllUsers();
 }

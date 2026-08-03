@@ -20,6 +20,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.distributed_chat_system.model.dto.MessageDto;
+import com.example.distributed_chat_system.repository.UserRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ public class RoomServiceImpl implements IRoomService {
     private final IMessageService messageService;
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
 
     @Override
     public CreateRoomResponse createRoom(UserPrincipal userPrincipal, RoomCreateRequest request) {
@@ -81,6 +83,7 @@ public class RoomServiceImpl implements IRoomService {
                 .roomDetailList(
                         chatRooms.stream()
                                 .map(room -> RoomListResponse.RoomDetail.builder()
+                                        .id(room.getId())
                                         .name(room.getName())
                                         .type(room.getType())
                                         .members(roomMemberCountMap.getOrDefault(room.getId(), 0L))
@@ -156,5 +159,14 @@ public class RoomServiceImpl implements IRoomService {
                         .senderId(msg.getSender())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public Map<Long, String> getAllUsers() {
+        return userRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        com.example.distributed_chat_system.entity.User::getId,
+                        com.example.distributed_chat_system.entity.User::getUsername
+                ));
     }
 }
