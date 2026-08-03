@@ -14,9 +14,10 @@ interface Room {
 interface SidebarProps {
   activeRoomId: string | null;
   setActiveRoomId: (id: string | null) => void;
+  userMap: Record<number, string>;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId, userMap }) => {
   const { token, user, logout } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
   // Modals state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showDmModal, setShowDmModal] = useState(false);
   
   // Create Room fields
   const [roomName, setRoomName] = useState('');
@@ -47,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
       if (!response.ok) {
         throw new Error('Failed to load rooms');
       }
-      const data = await response.json(); // { roomDetailList: [...] }
+      const data = await response.json();
       setRooms(data.roomDetailList || []);
     } catch (err: any) {
       setError(err.message || 'Error loading rooms');
@@ -82,12 +84,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
         throw new Error('Failed to create room');
       }
 
-      const data = await response.json(); // { roomId: number, ... }
+      const data = await response.json();
       setRoomName('');
       setShowCreateModal(false);
       await fetchRooms();
       
-      // Auto select the newly created room
       if (data.roomId) {
         setActiveRoomId(String(data.roomId));
       }
@@ -128,6 +129,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
     }
   };
 
+  const handleStartDm = async (targetUserId: number) => {
+    if (!token) return;
+    try {
+      const response = await fetch(`http://localhost:8080/api/room/dm?targetUserId=${targetUserId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to start direct message');
+      }
+      const data = await response.json(); // { roomId: number, ... }
+      setShowDmModal(false);
+      await fetchRooms();
+      setActiveRoomId(String(data.roomId));
+    } catch (err: any) {
+      alert(err.message || 'Error starting DM');
+    }
+  };
+
+  const groupRooms = rooms.filter(r => r.type === 'GROUP');
+  const dmRooms = rooms.filter(r => r.type === 'PRIVATE');
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
@@ -141,8 +164,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
       </div>
 
       <div className="sidebar-scroll">
+        {/* GROUP ROOMS */}
         <div className="section-label">
-          <span>Chat Rooms ({rooms.length})</span>
+          <span>Chat Rooms ({groupRooms.length})</span>
           <div style={{ display: 'flex', gap: '4px' }}>
             <button 
               className="action-icon-btn" 
@@ -165,11 +189,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
           <p style={{ padding: '0 8px', color: 'var(--text-muted)', fontSize: '13px' }}>Loading rooms...</p>
         ) : error ? (
           <p style={{ padding: '0 8px', color: 'var(--danger)', fontSize: '13px' }}>{error}</p>
-        ) : rooms.length === 0 ? (
-          <p style={{ padding: '0 8px', color: 'var(--text-muted)', fontSize: '13px' }}>No rooms joined yet.</p>
+        ) : groupRooms.length === 0 ? (
+          <p style={{ padding: '0 8px', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '16px' }}>No chat rooms joined.</p>
         ) : (
-          <div className="room-list">
-            {rooms.map((room) => {
+          <div className="room-list" style={{ marginBottom: '16px' }}>
+            {groupRooms.map((room) => {
               const isActive = activeRoomId === String(room.id);
               return (
                 <button
@@ -184,6 +208,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
                   <div className="room-meta">
                     <Users size={10} />
                     <span>{room.members}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* DIRECT MESSAGES */}
+        <div className="section-label" style={{ marginTop: '8px' }}>
+          <span>Direct Messages ({dmRooms.length})</span>
+          <button 
+            className="action-icon-btn" 
+            onClick={() => setShowDmModal(true)} 
+            title="Start direct message"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+
+        {!loading && dmRooms.length === 0 ? (
+          <p style={{ padding: '0 8px', color: 'var(--text-muted)', fontSize: '13px' }}>No active DMs.</p>
+        ) : (
+          <div className="room-list">
+            {dmRooms.map((room) => {
+              const isActive = activeRoomId === String(room.id);
+              const displayName = room.name.split('_').find(name => name !== user?.username) || room.name;
+              return (
+                <button
+                  key={room.id}
+                  className={`room-item ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveRoomId(String(room.id))}
+                >
+                  <div className="room-info">
+                    <div className="user-avatar" style={{ width: '20px', height: '20px', fontSize: '10px', boxShadow: 'none' }}>
+                      {displayName[0]}
+                    </div>
+                    <span className="room-name">{displayName}</span>
                   </div>
                 </button>
               );
@@ -286,6 +347,51 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* START DM MODAL */}
+      {showDmModal && (
+        <div className="modal-overlay">
+          <div className="modal-card glass">
+            <div className="modal-header">
+              <h3 className="modal-title">New Conversation</h3>
+              <button className="modal-close-btn" onClick={() => setShowDmModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-form">
+              <label className="form-label" style={{ marginBottom: '4px' }}>Select a User</label>
+              <div className="room-list" style={{ maxHeight: '250px', overflowY: 'auto', gap: '6px' }}>
+                {Object.entries(userMap)
+                  .map(([id, username]) => ({ id: Number(id), username }))
+                  .filter((u) => u.id !== user?.userId)
+                  .length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+                      No other users registered.
+                    </p>
+                  ) : (
+                    Object.entries(userMap)
+                      .map(([id, username]) => ({ id: Number(id), username }))
+                      .filter((u) => u.id !== user?.userId)
+                      .map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          className="room-item"
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px' }}
+                          onClick={() => handleStartDm(u.id)}
+                        >
+                          <div className="user-avatar" style={{ width: '28px', height: '28px', fontSize: '12px', boxShadow: 'none' }}>
+                            {u.username[0]}
+                          </div>
+                          <span style={{ fontWeight: 600 }}>{u.username}</span>
+                        </button>
+                      ))
+                  )}
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -169,4 +169,52 @@ public class RoomServiceImpl implements IRoomService {
                         com.example.distributed_chat_system.entity.User::getUsername
                 ));
     }
+
+    @Override
+    public CreateRoomResponse getOrCreateDmRoom(Long currentUserId, Long targetUserId) {
+        if (currentUserId.equals(targetUserId)) {
+            throw new CustomException("Cannot start a direct message with yourself!");
+        }
+
+        List<Long> privateRooms = roomMemberService.findPrivateRoomsBetweenUsers(currentUserId, targetUserId);
+        if (!privateRooms.isEmpty()) {
+            Long existingRoomId = privateRooms.get(0);
+            ChatRooms chatRooms = chatRoomService.getById(existingRoomId);
+            return CreateRoomResponse.builder()
+                    .roomId(existingRoomId)
+                    .name(chatRooms.getName())
+                    .type(chatRooms.getType())
+                    .build();
+        }
+
+        com.example.distributed_chat_system.entity.User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new CustomException("Current User not found"));
+        com.example.distributed_chat_system.entity.User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new CustomException("Target User not found"));
+
+        ChatRooms newRoom = ChatRooms.builder()
+                .name(currentUser.getUsername() + "_" + targetUser.getUsername())
+                .type(com.example.distributed_chat_system.enums.ChatroomType.PRIVATE)
+                .build();
+
+        ChatRooms savedRoom = chatRoomService.save(newRoom);
+
+        RoomMember currentMember = RoomMember.builder()
+                .room(savedRoom.getId())
+                .user(currentUserId)
+                .build();
+        roomMemberService.save(currentMember);
+
+        RoomMember targetMember = RoomMember.builder()
+                .room(savedRoom.getId())
+                .user(targetUserId)
+                .build();
+        roomMemberService.save(targetMember);
+
+        return CreateRoomResponse.builder()
+                .roomId(savedRoom.getId())
+                .name(savedRoom.getName())
+                .type(savedRoom.getType())
+                .build();
+    }
 }

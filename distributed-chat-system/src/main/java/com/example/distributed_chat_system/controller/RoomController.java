@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -54,8 +55,15 @@ public class RoomController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<java.util.Map<Long, String>> getAllUsers(@CurrentUser UserPrincipal userPrincipal) {
+    public ResponseEntity<Map<Long, String>> getAllUsers(@CurrentUser UserPrincipal userPrincipal) {
         return ResponseEntity.ok(roomService.getAllUsers());
+    }
+
+    @PostMapping("/room/dm")
+    public ResponseEntity<CreateRoomResponse> getOrCreateDmRoom(
+            @CurrentUser UserPrincipal userPrincipal,
+            @RequestParam Long targetUserId) {
+        return ResponseEntity.ok(roomService.getOrCreateDmRoom(userPrincipal.getUserId(), targetUserId));
     }
 
 }

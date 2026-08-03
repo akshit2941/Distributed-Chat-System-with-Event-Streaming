@@ -11,4 +11,6 @@ public interface IRoomMemberService {
     List<RoomMemberCountProjection> countMembersByRoomIds(List<Long> Ids);
 
     boolean isMember(Long roomId, Long userId);
+
+    List<Long> findPrivateRoomsBetweenUsers(Long user1, Long user2);
 }

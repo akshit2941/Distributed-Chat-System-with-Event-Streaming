@@ -23,4 +23,6 @@ public interface IRoomService {
     List<MessageResponse> getMessageHistory(Long userId, Long roomId);
 
     Map<Long, String> getAllUsers();
+
+    CreateRoomResponse getOrCreateDmRoom(Long currentUserId, Long targetUserId);
 }

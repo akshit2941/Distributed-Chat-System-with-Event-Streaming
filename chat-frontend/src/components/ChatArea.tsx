@@ -37,6 +37,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [isMember, setIsMember] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
+  const [roomType, setRoomType] = useState<'GROUP' | 'PRIVATE'>('GROUP');
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const lastTypingTimeRef = useRef<number>(0);
@@ -60,9 +61,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             (r: any) => String(r.id) === activeRoomId
           );
           if (currentRoom) {
-            setRoomName(currentRoom.name);
+            setRoomType(currentRoom.type);
+            if (currentRoom.type === 'PRIVATE') {
+              const displayName = currentRoom.name.split('_').find((name: string) => name !== user?.username) || currentRoom.name;
+              setRoomName(displayName);
+            } else {
+              setRoomName(currentRoom.name);
+            }
           } else {
             setRoomName(`Room #${activeRoomId}`);
+            setRoomType('GROUP');
           }
         }
 
@@ -227,7 +235,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     <div className="chat-area">
       <div className="chat-header">
         <div className="chat-header-left">
-          <span className="chat-room-badge">#</span>
+          <span className="chat-room-badge">{roomType === 'PRIVATE' ? '@' : '#'}</span>
           <h2 className="chat-room-title">{roomName}</h2>
           <div className="chat-room-status">
             <span>•</span>
@@ -245,7 +253,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>Loading message history...</p>
         ) : websocketMessages.length === 0 ? (
           <div style={{ color: 'var(--text-muted)', textAlign: 'center', margin: 'auto' }}>
-            <p>Welcome to the beginning of #{roomName}!</p>
+            <p>Welcome to the beginning of {roomType === 'PRIVATE' ? '@' : '#'}{roomName}!</p>
             <p style={{ fontSize: '12px' }}>Send a message to start streaming.</p>
           </div>
         ) : (

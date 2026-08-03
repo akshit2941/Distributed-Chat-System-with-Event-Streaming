@@ -41,7 +41,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-      <Sidebar activeRoomId={activeRoomId} setActiveRoomId={setActiveRoomId} />
+      <Sidebar activeRoomId={activeRoomId} setActiveRoomId={setActiveRoomId} userMap={userMap} />
       <ChatArea
         activeRoomId={activeRoomId}
         websocketMessages={messages}
