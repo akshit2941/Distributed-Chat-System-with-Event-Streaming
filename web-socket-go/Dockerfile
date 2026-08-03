@@ -3,12 +3,13 @@ FROM golang:alpine AS builder
 
 WORKDIR /app
 
-# Copy dependencies files and download
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy the dependency rate-limiter-go module
+COPY rate-limiter-go /rate-limiter-go
 
-# Copy the entire source code and build the executable
-COPY . .
+# Copy the web-socket-go source files
+COPY web-socket-go /app
+
+# Build the executable
 RUN CGO_ENABLED=0 GOOS=linux go build -o ws-server ./cmd/server
 
 # Stage 2: Final lightweight image

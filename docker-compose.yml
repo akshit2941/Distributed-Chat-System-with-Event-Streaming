@@ -56,7 +56,8 @@ services:
 
   go-websocket-server:
     build:
-      context: ./web-socket-go
+      context: .
+      dockerfile: ./web-socket-go/Dockerfile
     container_name: go-ws-server
     restart: always
     ports:
