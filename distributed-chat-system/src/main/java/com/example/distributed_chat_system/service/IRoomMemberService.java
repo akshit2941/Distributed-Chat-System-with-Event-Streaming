@@ -15,4 +15,6 @@ public interface IRoomMemberService {
     List<Long> findPrivateRoomsBetweenUsers(Long user1, Long user2);
 
     void leaveRoom(Long roomId, Long userId);
+
+    List<Long> getMemberIdsByRoomId(Long roomId);
 }

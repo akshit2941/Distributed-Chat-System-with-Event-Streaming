@@ -26,4 +26,6 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
 
     @org.springframework.transaction.annotation.Transactional
     void deleteByRoomAndUser(Long room, Long user);
+
+    List<RoomMember> findByRoom(Long room);
 }

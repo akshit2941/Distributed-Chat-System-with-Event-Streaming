@@ -230,4 +230,9 @@ public class RoomServiceImpl implements IRoomService {
         }
         roomMemberService.leaveRoom(roomId, userId);
     }
+
+    @Override
+    public List<Long> getRoomMembers(Long roomId) {
+        return roomMemberService.getMemberIdsByRoomId(roomId);
+    }
 }

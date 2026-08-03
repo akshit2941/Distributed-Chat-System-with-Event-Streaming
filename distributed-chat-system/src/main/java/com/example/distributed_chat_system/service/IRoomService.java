@@ -27,4 +27,6 @@ public interface IRoomService {
     CreateRoomResponse getOrCreateDmRoom(Long currentUserId, Long targetUserId);
 
     void leaveRoom(Long userId, Long roomId);
+
+    List<Long> getRoomMembers(Long roomId);
 }

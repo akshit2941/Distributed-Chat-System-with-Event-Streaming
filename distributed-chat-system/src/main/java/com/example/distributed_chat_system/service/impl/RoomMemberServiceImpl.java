@@ -41,4 +41,11 @@ public class RoomMemberServiceImpl implements IRoomMemberService {
     public void leaveRoom(Long roomId, Long userId) {
         roomMemberRepository.deleteByRoomAndUser(roomId, userId);
     }
+
+    @Override
+    public List<Long> getMemberIdsByRoomId(Long roomId) {
+        return roomMemberRepository.findByRoom(roomId).stream()
+                .map(RoomMember::getUser)
+                .toList();
+    }
 }

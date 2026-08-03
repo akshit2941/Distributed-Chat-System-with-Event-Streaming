@@ -74,4 +74,11 @@ public class RoomController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/room/{roomId}/members")
+    public ResponseEntity<List<Long>> getRoomMembers(
+            @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long roomId) {
+        return ResponseEntity.ok(roomService.getRoomMembers(roomId));
+    }
+
 }
