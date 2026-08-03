@@ -50,6 +50,7 @@ export const Dashboard: React.FC = () => {
         sendTyping={sendTyping}
         userMap={userMap}
         isConnected={isConnected}
+        onLeaveRoom={() => setActiveRoomId(null)}
       />
     </div>
   );

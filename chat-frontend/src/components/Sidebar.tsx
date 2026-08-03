@@ -60,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId,
 
   useEffect(() => {
     fetchRooms();
-  }, [token]);
+  }, [token, activeRoomId]);
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();

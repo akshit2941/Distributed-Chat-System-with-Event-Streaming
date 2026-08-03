@@ -23,4 +23,7 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
            "WHERE rm1.room = rm2.room AND rm1.room = cr.id " +
            "AND rm1.user = :user1 AND rm2.user = :user2 AND cr.type = :type")
     List<Long> findPrivateRoomsBetweenUsers(@Param("user1") Long user1, @Param("user2") Long user2, @Param("type") com.example.distributed_chat_system.enums.ChatroomType type);
+
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByRoomAndUser(Long room, Long user);
 }

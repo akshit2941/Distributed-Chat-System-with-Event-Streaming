@@ -66,4 +66,12 @@ public class RoomController {
         return ResponseEntity.ok(roomService.getOrCreateDmRoom(userPrincipal.getUserId(), targetUserId));
     }
 
+    @PostMapping("/room/leave")
+    public ResponseEntity<Void> leaveRoom(
+            @CurrentUser UserPrincipal userPrincipal,
+            @RequestParam Long id) {
+        roomService.leaveRoom(userPrincipal.getUserId(), id);
+        return ResponseEntity.ok().build();
+    }
+
 }

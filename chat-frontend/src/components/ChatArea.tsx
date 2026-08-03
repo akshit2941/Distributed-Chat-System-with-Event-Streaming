@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Send, MessageSquareOff, Lock, UserPlus, Radio } from 'lucide-react';
+import { Send, MessageSquareOff, Lock, UserPlus, Radio, LogOut } from 'lucide-react';
 import './ChatArea.css';
 
 interface Message {
@@ -18,6 +18,7 @@ interface ChatAreaProps {
   sendTyping: () => void;
   userMap: Record<number, string>;
   isConnected: boolean;
+  onLeaveRoom: () => void;
 }
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
@@ -27,7 +28,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   typingUsers,
   sendTyping,
   userMap,
-  isConnected
+  isConnected,
+  onLeaveRoom
 }) => {
   const { token, user } = useAuth();
   const [text, setText] = useState('');
@@ -202,6 +204,35 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
+  const [leaveLoading, setLeaveLoading] = useState(false);
+
+  const handleLeaveRoom = async () => {
+    if (!activeRoomId || !token) return;
+    const confirmMessage = roomType === 'PRIVATE'
+      ? 'Are you sure you want to close this direct message conversation?'
+      : 'Are you sure you want to leave this chat room?';
+
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      setLeaveLoading(true);
+      const response = await fetch(`http://localhost:8080/api/room/leave?id=${activeRoomId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to leave room');
+      }
+
+      onLeaveRoom();
+    } catch (err: any) {
+      alert(err.message || 'Error leaving room');
+    } finally {
+      setLeaveLoading(false);
+    }
+  };
+
   if (!activeRoomId) {
     return (
       <div className="no-room-selected">
@@ -242,9 +273,32 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             <span>Room ID: {activeRoomId}</span>
           </div>
         </div>
-        <div className={`connection-pill ${isConnected ? '' : 'offline'}`}>
-          <Radio size={14} className={isConnected ? 'pulsing' : ''} />
-          <span>{isConnected ? 'LIVE' : 'DISCONNECTED'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className={`connection-pill ${isConnected ? '' : 'offline'}`}>
+            <Radio size={14} className={isConnected ? 'pulsing' : ''} />
+            <span>{isConnected ? 'LIVE' : 'DISCONNECTED'}</span>
+          </div>
+          {isMember && (
+            <button
+              className="action-icon-btn"
+              onClick={handleLeaveRoom}
+              disabled={leaveLoading}
+              title={roomType === 'PRIVATE' ? 'Close Direct Message' : 'Leave Chat Room'}
+              style={{
+                padding: '6px',
+                color: 'var(--danger)',
+                borderRadius: '6px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <LogOut size={16} />
+            </button>
+          )}
         </div>
       </div>
 

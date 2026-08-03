@@ -217,4 +217,17 @@ public class RoomServiceImpl implements IRoomService {
                 .type(savedRoom.getType())
                 .build();
     }
+
+    @Override
+    public void leaveRoom(Long userId, Long roomId) {
+        ChatRooms room = chatRoomService.getById(roomId);
+        if (room == null) {
+            throw new CustomException("Chat Room Not Found!");
+        }
+        boolean isMember = roomMemberService.isMember(roomId, userId);
+        if (!isMember) {
+            throw new CustomException("You are not a member of this room!");
+        }
+        roomMemberService.leaveRoom(roomId, userId);
+    }
 }

@@ -35,4 +35,10 @@ public class RoomMemberServiceImpl implements IRoomMemberService {
     public List<Long> findPrivateRoomsBetweenUsers(Long user1, Long user2) {
         return roomMemberRepository.findPrivateRoomsBetweenUsers(user1, user2, ChatroomType.PRIVATE);
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void leaveRoom(Long roomId, Long userId) {
+        roomMemberRepository.deleteByRoomAndUser(roomId, userId);
+    }
 }
