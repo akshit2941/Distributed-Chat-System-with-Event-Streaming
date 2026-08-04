@@ -43,12 +43,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [members, setMembers] = useState<number[]>([]);
   const [showMembersPanel, setShowMembersPanel] = useState(true);
 
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const feedRef = useRef<HTMLDivElement | null>(null);
   const lastTypingTimeRef = useRef<number>(0);
+  const prevLengthRef = useRef(websocketMessages.length);
 
   // Fetch Room Name, History, and Members when activeRoomId changes
   useEffect(() => {
     if (!activeRoomId || !token) return;
+
+    // Reset pagination states on room switch
+    setPage(0);
+    setHasMore(true);
+    setLoadingMore(false);
 
     const fetchHistoryAndDetails = async () => {
       try {
@@ -78,9 +90,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           }
         }
 
-        // Fetch messages history
+        // Fetch messages history page 0, size 20
         const historyResponse = await fetch(
-          `http://localhost:8080/api/room/${activeRoomId}/messages`,
+          `http://localhost:8080/api/room/${activeRoomId}/messages?page=0&size=20`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -101,6 +113,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         }
 
         const historyData = await historyResponse.json();
+        if (historyData.length < 20) {
+          setHasMore(false);
+        }
         
         // Map historical messages to our UI structure
         const mappedHistory = historyData.map((msg: any) => ({
@@ -110,7 +125,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`
         }));
 
-        setWebsocketMessages(mappedHistory);
+        // Reverse because page 0 returns DESC, but we render chronologically (oldest at top)
+        const reversed = [...mappedHistory].reverse();
+        setWebsocketMessages(reversed);
 
         // Fetch room members
         const membersResponse = await fetch(
@@ -131,10 +148,76 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     fetchHistoryAndDetails();
   }, [activeRoomId, token, userMap, user?.username, setWebsocketMessages]);
 
-  // Auto-scroll to bottom of messages
+  // Auto-scroll to bottom of messages only on initial load or new incoming messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [websocketMessages, typingUsers]);
+    const prevLength = prevLengthRef.current;
+    prevLengthRef.current = websocketMessages.length;
+
+    // Scroll if a single new message is added or it is initial load
+    if (websocketMessages.length === prevLength + 1 || page === 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [websocketMessages, typingUsers, page]);
+
+  const loadMoreMessages = async () => {
+    if (!token || !activeRoomId || !hasMore || loadingMore) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+
+      const container = feedRef.current;
+      const prevScrollHeight = container ? container.scrollHeight : 0;
+      const prevScrollTop = container ? container.scrollTop : 0;
+
+      const response = await fetch(
+        `http://localhost:8080/api/room/${activeRoomId}/messages?page=${nextPage}&size=20`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.ok) {
+        const historyData = await response.json();
+
+        if (historyData.length < 20) {
+          setHasMore(false);
+        }
+
+        const mapped = historyData.map((msg: any) => ({
+          roomId: Number(activeRoomId),
+          senderId: msg.senderId,
+          content: msg.content,
+          senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`
+        }));
+
+        const reversed = [...mapped].reverse();
+        
+        // Prepend older messages
+        setWebsocketMessages((prev) => [...reversed, ...prev]);
+        setPage(nextPage);
+
+        // Adjust scroll position on next tick to prevent jump
+        setTimeout(() => {
+          if (feedRef.current) {
+            feedRef.current.scrollTop = feedRef.current.scrollHeight - prevScrollHeight + prevScrollTop;
+          }
+        }, 0);
+      }
+    } catch (err) {
+      console.error('Error loading more messages:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleScroll = () => {
+    const container = feedRef.current;
+    if (!container || historyLoading || loadingMore || !hasMore) return;
+
+    // Load more when scrolled close to the top
+    if (container.scrollTop < 15) {
+      loadMoreMessages();
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
@@ -193,18 +276,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       
       // Fetch messages history
       const historyResponse = await fetch(
-        `http://localhost:8080/api/room/${activeRoomId}/messages`,
+        `http://localhost:8080/api/room/${activeRoomId}/messages?page=0&size=20`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
+        if (historyData.length < 20) {
+          setHasMore(false);
+        }
         const mappedHistory = historyData.map((msg: any) => ({
           roomId: Number(activeRoomId),
           senderId: msg.senderId,
           content: msg.content,
           senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`
         }));
-        setWebsocketMessages(mappedHistory);
+        const reversed = [...mappedHistory].reverse();
+        setWebsocketMessages(reversed);
       }
 
       // Fetch room members
@@ -344,7 +431,21 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       <div style={{ display: 'flex', flex: 1, width: '100%', overflow: 'hidden' }}>
         {/* Main Feed Container */}
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
-          <div className="chat-feed">
+          <div className="chat-feed" ref={feedRef} onScroll={handleScroll}>
+            {loadingMore && (
+              <p style={{
+                color: 'var(--accent-primary)',
+                textAlign: 'center',
+                fontSize: '12px',
+                padding: '8px 0',
+                margin: 0,
+                background: 'rgba(255, 255, 255, 0.01)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.03)'
+              }}>
+                Loading older messages...
+              </p>
+            )}
+            
             {historyLoading ? (
               <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>Loading message history...</p>
             ) : websocketMessages.length === 0 ? (

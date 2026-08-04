@@ -20,7 +20,7 @@ public interface IRoomService {
 
     MessageResponse sendMessage(Long userId, MessageRequest request);
 
-    List<MessageResponse> getMessageHistory(Long userId, Long roomId);
+    List<MessageResponse> getMessageHistory(Long userId, Long roomId, int page, int size);
 
     Map<Long, String> getAllUsers();
 

@@ -50,8 +50,12 @@ public class RoomController {
     }
 
     @GetMapping("/room/{roomId}/messages")
-    public ResponseEntity<List<MessageResponse>> getMessageHistory(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long roomId){
-        return ResponseEntity.ok(roomService.getMessageHistory(userPrincipal.getUserId(), roomId));
+    public ResponseEntity<List<MessageResponse>> getMessageHistory(
+            @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long roomId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(roomService.getMessageHistory(userPrincipal.getUserId(), roomId, page, size));
     }
 
     @GetMapping("/users")

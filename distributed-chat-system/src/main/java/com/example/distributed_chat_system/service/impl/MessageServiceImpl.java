@@ -6,6 +6,8 @@ import com.example.distributed_chat_system.service.IMessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -22,5 +24,10 @@ public class MessageServiceImpl implements IMessageService {
     @Override
     public List<Message> getMessagesByRoom(Long roomId) {
         return messageRepository.findByRoomOrderByCreatedAtAsc(roomId);
+    }
+
+    @Override
+    public Page<Message> getMessagesByRoom(Long roomId, Pageable pageable) {
+        return messageRepository.findByRoom(roomId, pageable);
     }
 }

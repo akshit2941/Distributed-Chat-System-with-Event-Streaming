@@ -22,6 +22,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.distributed_chat_system.model.dto.MessageDto;
 import com.example.distributed_chat_system.repository.UserRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -139,7 +143,7 @@ public class RoomServiceImpl implements IRoomService {
     }
 
     @Override
-    public List<MessageResponse> getMessageHistory(Long userId, Long roomId) {
+    public List<MessageResponse> getMessageHistory(Long userId, Long roomId, int page, int size) {
         ChatRooms room = chatRoomService.getById(roomId);
         if (room == null) {
             throw new CustomException("Chat Room Not Found!");
@@ -150,9 +154,10 @@ public class RoomServiceImpl implements IRoomService {
             throw new CustomException("You are not a member of this chat room!");
         }
 
-        List<Message> messages = messageService.getMessagesByRoom(roomId);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Message> messagePage = messageService.getMessagesByRoom(roomId, pageable);
 
-        return messages.stream()
+        return messagePage.getContent().stream()
                 .map(msg -> MessageResponse.builder()
                         .content(msg.getContent())
                         .roomId(msg.getRoom())
