@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.distributed_chat_system.model.dto.MessageDto;
 import com.example.distributed_chat_system.repository.UserRepository;
+import com.example.distributed_chat_system.repository.MessageRepository;
+import com.example.distributed_chat_system.repository.RoomMemberRepository;
+import com.example.distributed_chat_system.entity.RoomMember;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +43,8 @@ public class RoomServiceImpl implements IRoomService {
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
     private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
+    private final RoomMemberRepository roomMemberRepository;
 
     @Override
     public CreateRoomResponse createRoom(UserPrincipal userPrincipal, RoomCreateRequest request) {
@@ -66,7 +71,7 @@ public class RoomServiceImpl implements IRoomService {
     }
 
     @Override
-    public RoomListResponse getRooms() {
+    public RoomListResponse getRooms(Long userId) {
         List<ChatRooms> chatRooms = chatRoomService.getAll();
 
         List<Long> chatRoomsId = chatRooms.stream()
@@ -86,14 +91,25 @@ public class RoomServiceImpl implements IRoomService {
         return RoomListResponse.builder()
                 .roomDetailList(
                         chatRooms.stream()
-                                .map(room -> RoomListResponse.RoomDetail.builder()
-                                        .id(room.getId())
-                                        .name(room.getName())
-                                        .type(room.getType())
-                                        .members(roomMemberCountMap.getOrDefault(room.getId(), 0L))
-                                        .createdAt(String.valueOf(room.getCreatedAt()))
-                                        .build()
-                                )
+                                .map(room -> {
+                                    long unread = 0L;
+                                    RoomMember member = roomMemberRepository.findByRoomAndUser(room.getId(), userId);
+                                    if (member != null) {
+                                        if (member.getLastReadMessageId() != null) {
+                                            unread = messageRepository.countByRoomAndIdGreaterThan(room.getId(), member.getLastReadMessageId());
+                                        } else {
+                                            unread = messageRepository.countByRoomAndCreatedAtGreaterThanEqual(room.getId(), member.getJoinedAt());
+                                        }
+                                    }
+                                    return RoomListResponse.RoomDetail.builder()
+                                            .id(room.getId())
+                                            .name(room.getName())
+                                            .type(room.getType())
+                                            .members(roomMemberCountMap.getOrDefault(room.getId(), 0L))
+                                            .createdAt(String.valueOf(room.getCreatedAt()))
+                                            .unreadCount(unread)
+                                            .build();
+                                })
                                 .toList()
 
                 )
@@ -228,6 +244,18 @@ public class RoomServiceImpl implements IRoomService {
                 .name(savedRoom.getName())
                 .type(savedRoom.getType())
                 .build();
+    }
+
+    @Override
+    public void markRoomAsRead(Long userId, Long roomId) {
+        RoomMember member = roomMemberRepository.findByRoomAndUser(roomId, userId);
+        if (member != null) {
+            com.example.distributed_chat_system.entity.Message latestMessage = messageRepository.findTopByRoomOrderByIdDesc(roomId);
+            if (latestMessage != null) {
+                member.setLastReadMessageId(latestMessage.getId());
+                roomMemberRepository.save(member);
+            }
+        }
     }
 
     @Override

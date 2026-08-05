@@ -26,5 +26,6 @@ public class RoomListResponse {
         private ChatroomType type;
         private Long members;
         private String createdAt;
+        private Long unreadCount;
     }
 }

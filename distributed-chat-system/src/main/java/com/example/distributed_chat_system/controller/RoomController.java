@@ -34,8 +34,16 @@ public class RoomController {
     }
 
     @GetMapping("/room/get")
-    public ResponseEntity<RoomListResponse> getRooms(@CurrentUser UserPrincipal userPrincipal){
-        return ResponseEntity.ok(roomService.getRooms());
+    public ResponseEntity<RoomListResponse> getRooms(@CurrentUser UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(roomService.getRooms(userPrincipal.getUserId()));
+    }
+
+    @PostMapping("/room/{roomId}/read")
+    public ResponseEntity<String> markAsRead(
+            @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long roomId) {
+        roomService.markRoomAsRead(userPrincipal.getUserId(), roomId);
+        return ResponseEntity.ok("Room marked as read");
     }
 
     @PostMapping("/room/join")

@@ -11,4 +11,10 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByRoomOrderByCreatedAtAsc(Long room);
 
     Page<Message> findByRoom(Long room, Pageable pageable);
+
+    long countByRoomAndIdGreaterThan(Long room, Long id);
+
+    long countByRoomAndCreatedAtGreaterThanEqual(Long room, java.time.LocalDateTime joinedAt);
+
+    Message findTopByRoomOrderByIdDesc(Long room);
 }

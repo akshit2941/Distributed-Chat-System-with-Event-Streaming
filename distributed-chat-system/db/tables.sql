@@ -24,6 +24,7 @@ CREATE TABLE roommember (
                             room_id BIGINT NOT NULL,
                             user_id BIGINT NOT NULL,
                             joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            last_read_message_id BIGINT DEFAULT NULL,
 
                             CONSTRAINT fk_room FOREIGN KEY (room_id)
                                 REFERENCES chatroom(id)

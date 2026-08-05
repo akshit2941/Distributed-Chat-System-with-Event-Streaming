@@ -14,7 +14,7 @@ public interface IRoomService {
 
     CreateRoomResponse createRoom(UserPrincipal userPrincipal, RoomCreateRequest request);
 
-    RoomListResponse getRooms();
+    RoomListResponse getRooms(Long userId);
 
     void joinRoom(Long userId ,Long id);
 
@@ -25,6 +25,8 @@ public interface IRoomService {
     Map<Long, String> getAllUsers();
 
     CreateRoomResponse getOrCreateDmRoom(Long currentUserId, Long targetUserId);
+
+    void markRoomAsRead(Long userId, Long roomId);
 
     void leaveRoom(Long userId, Long roomId);
 

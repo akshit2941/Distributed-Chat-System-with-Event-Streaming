@@ -40,6 +40,9 @@ public class RoomMember {
     @Column(name = "joined_at")
     private LocalDateTime joinedAt;
 
+    @Column(name = "last_read_message_id")
+    private Long lastReadMessageId;
+
     @PrePersist
     public void prePersist() {
         if (joinedAt == null) {
