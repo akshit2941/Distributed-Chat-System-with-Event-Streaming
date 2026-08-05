@@ -46,8 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeKeys = async () => {
       try {
-        const pubKeyKey = `e2ee_public_key_${user.userId}`;
-        const privKeyKey = `e2ee_private_key_${user.userId}`;
+        const pubKeyKey = `e2ee_public_key_${user.username}`;
+        const privKeyKey = `e2ee_private_key_${user.username}`;
 
         let pubKey = localStorage.getItem(pubKeyKey);
         let privKey = localStorage.getItem(privKeyKey);

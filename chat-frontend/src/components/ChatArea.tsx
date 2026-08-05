@@ -30,13 +30,15 @@ interface DecryptedMessageBubbleProps {
   iv?: string;
   encryptedKeys?: string;
   userId?: number;
+  username?: string;
 }
 
 const DecryptedMessageBubble: React.FC<DecryptedMessageBubbleProps> = ({
   content,
   iv,
   encryptedKeys,
-  userId
+  userId,
+  username
 }) => {
   const [decryptedText, setDecryptedText] = useState<string | null>(null);
   const [error, setError] = useState(false);
@@ -58,7 +60,7 @@ const DecryptedMessageBubble: React.FC<DecryptedMessageBubbleProps> = ({
           return;
         }
 
-        const privateKeyJson = localStorage.getItem(`e2ee_private_key_${userId}`);
+        const privateKeyJson = localStorage.getItem(`e2ee_private_key_${username}`);
         if (!privateKeyJson) {
           setError(true);
           return;
@@ -337,7 +339,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
     // Apply E2EE envelope encryption if in a Direct Message channel
     if (roomType === 'PRIVATE') {
-      const selfPublicKey = localStorage.getItem(`e2ee_public_key_${user?.userId}`);
+      const selfPublicKey = localStorage.getItem(`e2ee_public_key_${user?.username}`);
       const recipientId = members.find((m) => m !== user?.userId);
 
       if (selfPublicKey && recipientPublicKey && recipientId) {
@@ -623,6 +625,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                           iv={msg.iv}
                           encryptedKeys={msg.encryptedKeys}
                           userId={user?.userId}
+                          username={user?.username}
                         />
                       </div>
                     </div>
