@@ -37,6 +37,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "public_key", columnDefinition = "TEXT")
+    private String publicKey;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

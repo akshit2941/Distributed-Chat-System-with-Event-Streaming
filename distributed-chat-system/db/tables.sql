@@ -3,6 +3,7 @@ CREATE TABLE user (
                       username VARCHAR(100) NOT NULL,
                       email VARCHAR(150) NOT NULL,
                       password VARCHAR(255) NOT NULL,
+                      public_key TEXT DEFAULT NULL,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
                       CONSTRAINT uq_username UNIQUE (username),
@@ -40,6 +41,8 @@ CREATE TABLE message (
                          room_id BIGINT NOT NULL,
                          sender_id BIGINT NOT NULL,
                          content TEXT NOT NULL,
+                         iv TEXT DEFAULT NULL,
+                         encrypted_keys TEXT DEFAULT NULL,
                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
                          CONSTRAINT fk_message_room FOREIGN KEY (room_id)

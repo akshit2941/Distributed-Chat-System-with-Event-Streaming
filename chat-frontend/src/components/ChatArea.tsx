@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Send, MessageSquareOff, Lock, UserPlus, Radio, LogOut, Users } from 'lucide-react';
+import { encryptMessageForUsers, decryptMessage } from '../utils/cryptoUtils';
 import './ChatArea.css';
 
 interface Message {
@@ -8,6 +9,8 @@ interface Message {
   senderId: number;
   content: string;
   senderUsername: string;
+  iv?: string;
+  encryptedKeys?: string;
 }
 
 interface ChatAreaProps {
@@ -20,6 +23,72 @@ interface ChatAreaProps {
   isConnected: boolean;
   onLeaveRoom: () => void;
 }
+
+// Subcomponent to handle asynchronous E2EE decryption
+interface DecryptedMessageBubbleProps {
+  content: string;
+  iv?: string;
+  encryptedKeys?: string;
+  userId?: number;
+}
+
+const DecryptedMessageBubble: React.FC<DecryptedMessageBubbleProps> = ({
+  content,
+  iv,
+  encryptedKeys,
+  userId
+}) => {
+  const [decryptedText, setDecryptedText] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    // Plain text message (e.g. public group channel)
+    if (!iv || !encryptedKeys || !userId) {
+      setDecryptedText(content);
+      return;
+    }
+
+    const performDecryption = async () => {
+      try {
+        const keysMap = JSON.parse(encryptedKeys);
+        const encryptedKeyForSelf = keysMap[String(userId)];
+
+        if (!encryptedKeyForSelf) {
+          setError(true);
+          return;
+        }
+
+        const privateKeyJson = localStorage.getItem(`e2ee_private_key_${userId}`);
+        if (!privateKeyJson) {
+          setError(true);
+          return;
+        }
+
+        const decrypted = await decryptMessage(content, iv, encryptedKeyForSelf, privateKeyJson);
+        setDecryptedText(decrypted);
+      } catch (err) {
+        console.error('Decryption error:', err);
+        setError(true);
+      }
+    };
+
+    performDecryption();
+  }, [content, iv, encryptedKeys, userId]);
+
+  if (error) {
+    return (
+      <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        🔐 Encrypted message (Decryption key missing or failed)
+      </span>
+    );
+  }
+
+  if (decryptedText === null) {
+    return <span style={{ color: 'var(--text-muted)' }}>Decrypting...</span>;
+  }
+
+  return <span>{decryptedText}</span>;
+};
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
   activeRoomId,
@@ -48,6 +117,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // E2EE states
+  const [recipientPublicKey, setRecipientPublicKey] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const feedRef = useRef<HTMLDivElement | null>(null);
   const lastTypingTimeRef = useRef<number>(0);
@@ -57,15 +129,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   useEffect(() => {
     if (!activeRoomId || !token) return;
 
-    // Reset pagination states on room switch
+    // Reset pagination and E2EE states on room switch
     setPage(0);
     setHasMore(true);
     setLoadingMore(false);
+    setRecipientPublicKey(null);
 
     const fetchHistoryAndDetails = async () => {
       try {
         setHistoryLoading(true);
         setIsMember(true);
+
+        let currentRoomObj: any = null;
 
         // Fetch room list first to resolve Room Name
         const listResponse = await fetch('http://localhost:8080/api/room/get', {
@@ -73,16 +148,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         });
         if (listResponse.ok) {
           const listData = await listResponse.json();
-          const currentRoom = listData.roomDetailList?.find(
+          currentRoomObj = listData.roomDetailList?.find(
             (r: any) => String(r.id) === activeRoomId
           );
-          if (currentRoom) {
-            setRoomType(currentRoom.type);
-            if (currentRoom.type === 'PRIVATE') {
-              const displayName = currentRoom.name.split('_').find((name: string) => name !== user?.username) || currentRoom.name;
+          if (currentRoomObj) {
+            setRoomType(currentRoomObj.type);
+            if (currentRoomObj.type === 'PRIVATE') {
+              const displayName = currentRoomObj.name.split('_').find((name: string) => name !== user?.username) || currentRoomObj.name;
               setRoomName(displayName);
             } else {
-              setRoomName(currentRoom.name);
+              setRoomName(currentRoomObj.name);
             }
           } else {
             setRoomName(`Room #${activeRoomId}`);
@@ -122,7 +197,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           roomId: Number(activeRoomId),
           senderId: msg.senderId,
           content: msg.content,
-          senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`
+          senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`,
+          iv: msg.iv,
+          encryptedKeys: msg.encryptedKeys
         }));
 
         // Reverse because page 0 returns DESC, but we render chronologically (oldest at top)
@@ -135,8 +212,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (membersResponse.ok) {
-          const membersData = await membersResponse.json();
+          const membersData: number[] = await membersResponse.json();
           setMembers(membersData);
+
+          // If PRIVATE room, fetch recipient public key for encryption
+          if (currentRoomObj && currentRoomObj.type === 'PRIVATE') {
+            const recipientId = membersData.find((m) => m !== user?.userId);
+            if (recipientId) {
+              const pkResponse = await fetch(`http://localhost:8080/api/user/${recipientId}/public-key`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              if (pkResponse.ok) {
+                const pkData = await pkResponse.json();
+                setRecipientPublicKey(pkData.publicKey);
+              }
+            }
+          }
         }
       } catch (err: any) {
         console.error('Error fetching history:', err);
@@ -146,7 +237,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     };
 
     fetchHistoryAndDetails();
-  }, [activeRoomId, token, userMap, user?.username, setWebsocketMessages]);
+  }, [activeRoomId, token, userMap, user?.username, setWebsocketMessages, user?.userId]);
 
   // Auto-scroll to bottom of messages only on initial load or new incoming messages
   useEffect(() => {
@@ -186,7 +277,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           roomId: Number(activeRoomId),
           senderId: msg.senderId,
           content: msg.content,
-          senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`
+          senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`,
+          iv: msg.iv,
+          encryptedKeys: msg.encryptedKeys
         }));
 
         const reversed = [...mapped].reverse();
@@ -237,6 +330,42 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     const messageContent = text.trim();
     setText(''); // Instant UI clear for fluidity
 
+    let bodyPayload: any = {
+      roomId: Number(activeRoomId),
+      message: messageContent
+    };
+
+    // Apply E2EE envelope encryption if in a Direct Message channel
+    if (roomType === 'PRIVATE') {
+      const selfPublicKey = localStorage.getItem(`e2ee_public_key_${user?.userId}`);
+      const recipientId = members.find((m) => m !== user?.userId);
+
+      if (selfPublicKey && recipientPublicKey && recipientId) {
+        try {
+          const encrypted = await encryptMessageForUsers(
+            messageContent,
+            selfPublicKey,
+            recipientPublicKey,
+            user!.userId,
+            recipientId
+          );
+          bodyPayload = {
+            roomId: Number(activeRoomId),
+            message: encrypted.ciphertext,
+            iv: encrypted.iv,
+            encryptedKeys: encrypted.encryptedKeys
+          };
+        } catch (err) {
+          console.error('E2EE encryption error:', err);
+          alert('Could not encrypt message. Sending aborted.');
+          setText(messageContent);
+          return;
+        }
+      } else {
+        console.warn('Recipient public key missing. Falling back to plain text.');
+      }
+    }
+
     try {
       const response = await fetch('http://localhost:8080/api/message/send', {
         method: 'POST',
@@ -244,10 +373,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          roomId: Number(activeRoomId),
-          message: messageContent
-        })
+        body: JSON.stringify(bodyPayload)
       });
 
       if (!response.ok) {
@@ -288,7 +414,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           roomId: Number(activeRoomId),
           senderId: msg.senderId,
           content: msg.content,
-          senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`
+          senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`,
+          iv: msg.iv,
+          encryptedKeys: msg.encryptedKeys
         }));
         const reversed = [...mappedHistory].reverse();
         setWebsocketMessages(reversed);
@@ -300,8 +428,21 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (membersResponse.ok) {
-        const membersData = await membersResponse.json();
+        const membersData: number[] = await membersResponse.json();
         setMembers(membersData);
+
+        if (roomType === 'PRIVATE') {
+          const recipientId = membersData.find((m) => m !== user?.userId);
+          if (recipientId) {
+            const pkResponse = await fetch(`http://localhost:8080/api/user/${recipientId}/public-key`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (pkResponse.ok) {
+              const pkData = await pkResponse.json();
+              setRecipientPublicKey(pkData.publicKey);
+            }
+          }
+        }
       }
     } catch (err: any) {
       alert(err.message || 'Error joining room');
@@ -377,6 +518,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           <div className="chat-room-status">
             <span>•</span>
             <span>Room ID: {activeRoomId}</span>
+            {roomType === 'PRIVATE' && (
+              <>
+                <span style={{ margin: '0 4px', color: 'var(--text-muted)' }}>|</span>
+                <span style={{ color: 'var(--accent-primary)', fontSize: '11px', fontWeight: 600 }}>🔐 END-TO-END ENCRYPTED</span>
+              </>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -470,7 +617,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                         </span>
                         <span className="message-time">ID: {msg.senderId}</span>
                       </div>
-                      <div className="message-bubble">{msg.content}</div>
+                      <div className="message-bubble">
+                        <DecryptedMessageBubble
+                          content={msg.content}
+                          iv={msg.iv}
+                          encryptedKeys={msg.encryptedKeys}
+                          userId={user?.userId}
+                        />
+                      </div>
                     </div>
                   </div>
                 );

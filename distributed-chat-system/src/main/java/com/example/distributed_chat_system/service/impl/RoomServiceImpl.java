@@ -126,6 +126,8 @@ public class RoomServiceImpl implements IRoomService {
                 .roomId(String.valueOf(request.getRoomId()))
                 .senderId(String.valueOf(userId))
                 .content(request.getMessage())
+                .iv(request.getIv())
+                .encryptedKeys(request.getEncryptedKeys())
                 .build();
 
         try {
@@ -139,6 +141,8 @@ public class RoomServiceImpl implements IRoomService {
                 .content(request.getMessage())
                 .roomId(request.getRoomId())
                 .senderId(userId)
+                .iv(request.getIv())
+                .encryptedKeys(request.getEncryptedKeys())
                 .build();
     }
 
@@ -159,9 +163,12 @@ public class RoomServiceImpl implements IRoomService {
 
         return messagePage.getContent().stream()
                 .map(msg -> MessageResponse.builder()
+                        .messageId(msg.getId())
                         .content(msg.getContent())
                         .roomId(msg.getRoom())
                         .senderId(msg.getSender())
+                        .iv(msg.getIv())
+                        .encryptedKeys(msg.getEncryptedKeys())
                         .build())
                 .toList();
     }

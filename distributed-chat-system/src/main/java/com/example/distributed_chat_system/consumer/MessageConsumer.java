@@ -29,6 +29,8 @@ public class MessageConsumer {
                     .room(Long.valueOf(messageDto.getRoomId()))
                     .sender(Long.valueOf(messageDto.getSenderId()))
                     .content(messageDto.getContent())
+                    .iv(messageDto.getIv())
+                    .encryptedKeys(messageDto.getEncryptedKeys())
                     .build();
 
             messageService.save(message);

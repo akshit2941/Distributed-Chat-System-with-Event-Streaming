@@ -33,10 +33,52 @@ function parseJwt(token: string): any {
   }
 }
 
+import { generateE2EEKeys } from '../utils/cryptoUtils';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Initialize and register E2EE RSA keys automatically when authenticated
+  useEffect(() => {
+    if (!token || !user) return;
+
+    const initializeKeys = async () => {
+      try {
+        const pubKeyKey = `e2ee_public_key_${user.userId}`;
+        const privKeyKey = `e2ee_private_key_${user.userId}`;
+
+        let pubKey = localStorage.getItem(pubKeyKey);
+        let privKey = localStorage.getItem(privKeyKey);
+
+        if (!pubKey || !privKey) {
+          console.log('Generating E2EE key pair for user:', user.username);
+          const keypair = await generateE2EEKeys();
+          localStorage.setItem(pubKeyKey, keypair.publicKey);
+          localStorage.setItem(privKeyKey, keypair.privateKey);
+          pubKey = keypair.publicKey;
+        }
+
+        console.log('Registering E2EE public key with backend...');
+        const response = await fetch('http://localhost:8080/api/user/public-key', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ publicKey: pubKey })
+        });
+        if (!response.ok) {
+          console.error('Failed to register public key on server:', await response.text());
+        }
+      } catch (err) {
+        console.error('E2EE key generation/registration error:', err);
+      }
+    };
+
+    initializeKeys();
+  }, [token, user]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('chat_token');

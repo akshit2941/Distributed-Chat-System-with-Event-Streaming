@@ -35,6 +35,12 @@ public class Message {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "iv", columnDefinition = "TEXT")
+    private String iv;
+
+    @Column(name = "encrypted_keys", columnDefinition = "TEXT")
+    private String encryptedKeys;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

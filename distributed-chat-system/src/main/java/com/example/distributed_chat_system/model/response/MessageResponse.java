@@ -14,4 +14,6 @@ public class MessageResponse {
     private Long roomId;
     private String content;
     private Long senderId;
+    private String iv;
+    private String encryptedKeys;
 }

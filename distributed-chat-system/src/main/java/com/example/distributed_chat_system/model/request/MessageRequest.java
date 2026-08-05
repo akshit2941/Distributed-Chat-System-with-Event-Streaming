@@ -10,4 +10,6 @@ import lombok.NoArgsConstructor;
 public class MessageRequest {
     private Long roomId;
     private String message;
+    private String iv;
+    private String encryptedKeys;
 }

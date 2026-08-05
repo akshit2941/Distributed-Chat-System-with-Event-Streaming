@@ -14,4 +14,6 @@ public class MessageDto {
     private String roomId;
     private String senderId;
     private String content;
+    private String iv;
+    private String encryptedKeys;
 }

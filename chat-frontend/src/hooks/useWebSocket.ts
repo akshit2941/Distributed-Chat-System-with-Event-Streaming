@@ -5,6 +5,8 @@ interface WebSocketMessage {
   roomId: string;
   senderId: number;
   content: string;
+  iv?: string;
+  encryptedKeys?: string;
 }
 
 export const useWebSocket = (
@@ -69,7 +71,9 @@ export const useWebSocket = (
                   roomId: Number(msg.roomId),
                   senderId: msg.senderId,
                   content: msg.content,
-                  senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`
+                  senderUsername: userMap[msg.senderId] || `User #${msg.senderId}`,
+                  iv: msg.iv,
+                  encryptedKeys: msg.encryptedKeys
                 }
               ]);
             }
