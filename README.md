@@ -1,6 +1,6 @@
 # Distributed Real-Time Chat System
 
-A scalable, real-time chat system built using Go (WebSocket) and Spring Boot (Java) with RabbitMQ for asynchronous message processing.
+A scalable, real-time chat system built using Go (WebSocket) and Spring Boot (Java) with RabbitMQ for asynchronous message processing. It includes a React frontend, End-to-End Encryption (E2EE) for private DMs, paginated chat history, and token-bucket connection rate limiting.
 
 ---
 
@@ -87,7 +87,20 @@ Supports:
 ### Chat History API
 
 * Fetch messages by room
-* Pagination supported
+* Pagination supported (infinite scroll with viewport lock)
+
+### End-to-End Encryption (E2EE)
+
+* Client-side RSA-OAEP 2048-bit key pairs and AES-GCM 256-bit envelope encryption for private DMs.
+* Private keys are stored in localStorage and never sent to the network.
+
+### Connection Rate Limiting
+
+* Token-bucket based connection rate limiting on Go WebSocket handshake.
+
+### Persisted Unread Counters
+
+* Persistent unread indicators and badge counts for rooms and DMs.
 
 ---
 
@@ -239,11 +252,9 @@ ws://localhost:8080/ws?token=YOUR_JWT
 
 ## Future Improvements
 
-* Read Receipts (DELIVERED / READ)
 * Online/Offline Presence
-* Multi-device support
-* Horizontal scaling (multiple Go instances)
-* Rate limiting
+* Multi-device sync backups for E2EE key recovery
+* Horizontal scaling (multiple Go instances behind load balancer)
 * Message retry and dead-letter queues
 
 ---
@@ -257,4 +268,4 @@ ws://localhost:8080/ws?token=YOUR_JWT
 
 ---
 
-This project is backend-focused. Frontend is intentionally not included.
+Includes a React client dashboard located in `/chat-frontend`.
