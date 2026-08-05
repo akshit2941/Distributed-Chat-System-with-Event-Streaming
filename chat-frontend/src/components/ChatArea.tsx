@@ -22,6 +22,7 @@ interface ChatAreaProps {
   userMap: Record<number, string>;
   isConnected: boolean;
   onLeaveRoom: () => void;
+  onMarkRead?: () => void;
 }
 
 // Subcomponent to handle asynchronous E2EE decryption
@@ -100,7 +101,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   sendTyping,
   userMap,
   isConnected,
-  onLeaveRoom
+  onLeaveRoom,
+  onMarkRead
 }) => {
   const { token, user } = useAuth();
   const [text, setText] = useState('');
@@ -108,6 +110,38 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   
   // Member/History state
   const [isMember, setIsMember] = useState(true);
+
+  const markAsRead = async () => {
+    if (!token || !activeRoomId) return;
+    try {
+      const response = await fetch(`http://localhost:8080/api/room/${activeRoomId}/read`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        if (onMarkRead) onMarkRead();
+      }
+    } catch (err) {
+      console.error('Error marking room as read:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeRoomId) {
+      markAsRead();
+    }
+  }, [activeRoomId]);
+
+  useEffect(() => {
+    if (websocketMessages.length > 0) {
+      const lastMsg = websocketMessages[websocketMessages.length - 1];
+      if (lastMsg.senderId !== user?.userId) {
+        markAsRead();
+      }
+    }
+  }, [websocketMessages]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
   const [roomType, setRoomType] = useState<'GROUP' | 'PRIVATE'>('GROUP');

@@ -9,15 +9,17 @@ interface Room {
   type: 'PRIVATE' | 'GROUP';
   members: number;
   createdAt: string;
+  unreadCount?: number;
 }
 
 interface SidebarProps {
   activeRoomId: string | null;
   setActiveRoomId: (id: string | null) => void;
   userMap: Record<number, string>;
+  refreshTrigger?: number;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId, userMap }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId, userMap, refreshTrigger }) => {
   const { token, user, logout } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId,
 
   useEffect(() => {
     fetchRooms();
-  }, [token, activeRoomId]);
+  }, [token, activeRoomId, refreshTrigger]);
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,9 +207,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId,
                     <Hash size={16} style={{ color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)' }} />
                     <span className="room-name">{room.name}</span>
                   </div>
-                  <div className="room-meta">
-                    <Users size={10} />
-                    <span>{room.members}</span>
+                  <div className="room-meta" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {room.unreadCount !== undefined && room.unreadCount > 0 && (
+                      <span className="unread-badge">{room.unreadCount}</span>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Users size={10} />
+                      <span>{room.members}</span>
+                    </div>
                   </div>
                 </button>
               );
@@ -246,6 +253,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeRoomId, setActiveRoomId,
                     </div>
                     <span className="room-name">{displayName}</span>
                   </div>
+                  {room.unreadCount !== undefined && room.unreadCount > 0 && (
+                    <span className="unread-badge">{room.unreadCount}</span>
+                  )}
                 </button>
               );
             })}

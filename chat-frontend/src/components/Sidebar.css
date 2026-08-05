@@ -311,3 +311,14 @@
   background-color: var(--accent-hover);
   box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }
+
+.unread-badge {
+  background-color: var(--danger, #ef4444);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-right: 4px;
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.4);
+}
