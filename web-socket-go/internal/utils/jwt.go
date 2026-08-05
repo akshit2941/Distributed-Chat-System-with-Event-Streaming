@@ -14,7 +14,12 @@ func ValidateToken(tokenString string) (int, error) {
 		return secretKey, nil
 	})
 
-	if err != nil || !token.Valid {
+	if err != nil {
+		fmt.Printf("JWT parsing error: %v\n", err)
+		return -1, fmt.Errorf("invalid token")
+	}
+	if !token.Valid {
+		fmt.Println("Token is invalid")
 		return -1, fmt.Errorf("invalid token")
 	}
 
